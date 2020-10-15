@@ -23,6 +23,8 @@ with open(filename, 'r') as f:
 		area.append(float(dataset3[i][1]))
 	print(s)
 	print(area)
+
+
 plt.plot(s, area,'ro')
 plt.show()
 
