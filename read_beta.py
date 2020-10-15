@@ -23,8 +23,6 @@ with open(filename, 'r') as f:
 		beta.append(float(dataset3[i][1]))
 	print(s)
 	print(beta)
-
-	
 plt.plot(s, beta,'ro')
 plt.show()
 
