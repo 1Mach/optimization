@@ -128,7 +128,7 @@ plt.sca(ax1)
 plt.plot(y, Min)
 plt.plot(y, Mout)
 plt.sca(ax2)
-# plt.plot(y, Qcond)
+plt.plot(y, Qcond)
 plt.show()
 
 
