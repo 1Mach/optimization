@@ -12,3 +12,4 @@ build
 *.xml
 *.svg
 .idea
+original_data
