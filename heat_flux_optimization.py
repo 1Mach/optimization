@@ -119,17 +119,17 @@ for i in range(0, 309):
 	Qcond_i=Q_out(Twall[i], Mout[i], area[i])+Q_extra(Twall[i], h_air[i])+Q_evap(M_evap(Twall[i], h_air[i], pressure[i], area[i]),Twall[i], area[i])-Q_imp(beta[i], area[i])-Q_aero(h_air[i])-Q_in(Twall[i], Min[i], area[i])
 	Qcond.append(Qcond_i)
 
-x=np.arange(253.15, 273.15, 1)
-y=np.arange(0, 309, 1)
-y_list=y.tolist()
-ax1=plt.subplot(211)
-ax2=plt.subplot(212)
-plt.sca(ax1)
-plt.plot(y, Min)
-plt.plot(y, Mout)
-plt.sca(ax2)
-plt.plot(y, Qcond)
-plt.show()
+# x=np.arange(253.15, 273.15, 1)
+# y=np.arange(0, 309, 1)
+# y_list=y.tolist()
+# ax1=plt.subplot(211)
+# ax2=plt.subplot(212)
+# plt.sca(ax1)
+# plt.plot(y, Min)
+# plt.plot(y, Mout)
+# plt.sca(ax2)
+# plt.plot(y, Qcond)
+# plt.show()
 
 
 
