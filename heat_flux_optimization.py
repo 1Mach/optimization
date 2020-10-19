@@ -41,8 +41,9 @@ area = area[0]
 h_air = h_air[0]
 pressure=pressure[0]
 Twall_steady=Twall_steady[0]
-Twall=[308 for x in range(0,309)]
-
+Twall1=[300 for x1 in range(0,309)]
+Twall2=[306 for x2 in range(0,309)]
+Twall3=[308 for x3 in range(0,309)]
 
 def Q_extra(Twall, hair):
 	T_inlet=251.35
@@ -93,31 +94,102 @@ def Q_cond(Qout, Qextra, Qevap, Qimp, Qaero, Qin):
 Mevap=[]
 Qevap=[]
 for i in range(0, 309):
-	Mevap.append(M_evap(Twall[i], h_air[i], pressure[i], area[i]))
-	Qevap.append(Q_evap(M_evap(Twall[i], h_air[i], pressure[i], area[i]), Twall[i], area[i]))
+	Mevap.append(M_evap(Twall_steady[i], h_air[i], pressure[i], area[i]))
+	Qevap.append(Q_evap(M_evap(Twall_steady[i], h_air[i], pressure[i], area[i]), Twall_steady[i], area[i]))
 Mout=[0 for x in range(0,309)]
 Min=[0 for x in range(0,309)]
-Mout[150]=M_imp(beta[150], area[150])-M_evap(Twall[150],h_air[150],pressure[150], area[150])
+Mout[150]=M_imp(beta[150], area[150])-M_evap(Twall_steady[150],h_air[150],pressure[150], area[150])
 for i in range(150, 308):
 	Min[i+1]=Mout[i]
-	Mout[i+1]=M_imp(beta[i+1], area[i])+Min[i+1]-M_evap(Twall[i+1],h_air[i+1],pressure[i+1], area[i+1])
+	Mout[i+1]=M_imp(beta[i+1], area[i])+Min[i+1]-M_evap(Twall_steady[i+1],h_air[i+1],pressure[i+1], area[i+1])
 	if Mout[i+1]<0:
 		Mout[i+1]=0
-
 for i in range(0, 151):
 	Min[150-i-1]=Mout[150-i]
-	Mout[150-i-1]=M_imp(beta[150-i-1], area[i])+Min[150-i-1]-M_evap(Twall[150-i-1],h_air[150-i-1],pressure[150-i-1], area[150-i-1])
+	Mout[150-i-1]=M_imp(beta[150-i-1], area[i])+Min[150-i-1]-M_evap(Twall_steady[150-i-1],h_air[150-i-1],pressure[150-i-1], area[150-i-1])
 	if Mout[150-i-1]<0:
 		Mout[150-i-1]=0
 
+Mevap1=[]
+Qevap1=[]
+for i in range(0, 309):
+	Mevap1.append(M_evap(Twall1[i], h_air[i], pressure[i], area[i]))
+	Qevap1.append(Q_evap(M_evap(Twall1[i], h_air[i], pressure[i], area[i]), Twall1[i], area[i]))
+Mout1=[0 for x in range(0,309)]
+Min1=[0 for x in range(0,309)]
+Mout1[150]=M_imp(beta[150], area[150])-M_evap(Twall1[150],h_air[150],pressure[150], area[150])
+for i in range(150, 308):
+	Min1[i+1]=Mout1[i]
+	Mout1[i+1]=M_imp(beta[i+1], area[i])+Min1[i+1]-M_evap(Twall1[i+1],h_air[i+1],pressure[i+1], area[i+1])
+	if Mout1[i+1]<0:
+		Mout1[i+1]=0
+for i in range(0, 151):
+	Min1[150-i-1]=Mout1[150-i]
+	Mout1[150-i-1]=M_imp(beta[150-i-1], area[i])+Min1[150-i-1]-M_evap(Twall1[150-i-1],h_air[150-i-1],pressure[150-i-1], area[150-i-1])
+	if Mout1[150-i-1]<0:
+		Mout1[150-i-1]=0
 
-def aim(Twall):  # 传入种群染色体矩阵解码后的基因表现型矩阵
-	return Q_out(Twall, Mout[10], area[10])+Q_extra(Twall, h_air[10])+Q_evap(M_evap(Twall, h_air[10], pressure[10], area[10]),Twall, area[10])-Q_imp(beta[10], area[10])-Q_aero(h_air[10])-Q_in(Twall, Min[10], area[10])
+Mevap2=[]
+Qevap2=[]
+for i in range(0, 309):
+	Mevap2.append(M_evap(Twall2[i], h_air[i], pressure[i], area[i]))
+	Qevap2.append(Q_evap(M_evap(Twall2[i], h_air[i], pressure[i], area[i]), Twall2[i], area[i]))
+Mout2=[0 for x in range(0,309)]
+Min2=[0 for x in range(0,309)]
+Mout2[150]=M_imp(beta[150], area[150])-M_evap(Twall2[150],h_air[150],pressure[150], area[150])
+for i in range(150, 308):
+	Min2[i+1]=Mout2[i]
+	Mout2[i+1]=M_imp(beta[i+1], area[i])+Min2[i+1]-M_evap(Twall2[i+1],h_air[i+1],pressure[i+1], area[i+1])
+	if Mout2[i+1]<0:
+		Mout2[i+1]=0
 
+for i in range(0, 151):
+	Min2[150-i-1]=Mout2[150-i]
+	Mout2[150-i-1]=M_imp(beta[150-i-1], area[i])+Min2[150-i-1]-M_evap(Twall2[150-i-1],h_air[150-i-1],pressure[150-i-1], area[150-i-1])
+	if Mout2[150-i-1]<0:
+		Mout2[150-i-1]=0
+
+Mevap3=[]
+Qevap3=[]
+for i in range(0, 309):
+	Mevap3.append(M_evap(Twall3[i], h_air[i], pressure[i], area[i]))
+	Qevap3.append(Q_evap(M_evap(Twall3[i], h_air[i], pressure[i], area[i]), Twall3[i], area[i]))
+Mout3=[0 for x in range(0,309)]
+Min3=[0 for x in range(0,309)]
+Mout3[150]=M_imp(beta[150], area[150])-M_evap(Twall3[150],h_air[150],pressure[150], area[150])
+for i in range(150, 308):
+	Min3[i+1]=Mout3[i]
+	Mout3[i+1]=M_imp(beta[i+1], area[i])+Min3[i+1]-M_evap(Twall3[i+1],h_air[i+1],pressure[i+1], area[i+1])
+	if Mout3[i+1]<0:
+		Mout3[i+1]=0
+
+for i in range(0, 151):
+	Min3[150-i-1]=Mout3[150-i]
+	Mout3[150-i-1]=M_imp(beta[150-i-1], area[i])+Min3[150-i-1]-M_evap(Twall3[150-i-1],h_air[150-i-1],pressure[150-i-1], area[150-i-1])
+	if Mout3[150-i-1]<0:
+		Mout3[150-i-1]=0
+# def aim(Twall):  # 传入种群染色体矩阵解码后的基因表现型矩阵
+# 	return Q_out(Twall, Mout[10], area[10])+Q_extra(Twall, h_air[10])+Q_evap(M_evap(Twall, h_air[10], pressure[10], area[10]),Twall, area[10])-Q_imp(beta[10], area[10])-Q_aero(h_air[10])-Q_in(Twall, Min[10], area[10])
 Qcond=[]
 for i in range(0, 309):
-	Qcond_i=Q_out(Twall[i], Mout[i], area[i])+Q_extra(Twall[i], h_air[i])+Q_evap(M_evap(Twall[i], h_air[i], pressure[i], area[i]),Twall[i], area[i])-Q_imp(beta[i], area[i])-Q_aero(h_air[i])-Q_in(Twall[i], Min[i], area[i])
+	Qcond_i=Q_out(Twall_steady[i], Mout[i], area[i])+Q_extra(Twall_steady[i], h_air[i])+Q_evap(M_evap(Twall_steady[i], h_air[i], pressure[i], area[i]),Twall_steady[i], area[i])-Q_imp(beta[i], area[i])-Q_aero(h_air[i])-Q_in(Twall_steady[i], Min[i], area[i])
 	Qcond.append(Qcond_i)
+
+Qcond1=[]
+for i in range(0, 309):
+	Qcond1_i=Q_out(Twall1[i], Mout1[i], area[i])+Q_extra(Twall1[i], h_air[i])+Q_evap(M_evap(Twall1[i], h_air[i], pressure[i], area[i]),Twall1[i], area[i])-Q_imp(beta[i], area[i])-Q_aero(h_air[i])-Q_in(Twall1[i], Min1[i], area[i])
+	Qcond1.append(Qcond1_i)
+Qcond2=[]
+for i in range(0, 309):
+	Qcond2_i=Q_out(Twall2[i], Mout2[i], area[i])+Q_extra(Twall2[i], h_air[i])+Q_evap(M_evap(Twall2[i], h_air[i], pressure[i], area[i]),Twall2[i], area[i])-Q_imp(beta[i], area[i])-Q_aero(h_air[i])-Q_in(Twall2[i], Min2[i], area[i])
+	Qcond2.append(Qcond2_i)
+
+Qcond3=[]
+for i in range(0, 309):
+	Qcond3_i=Q_out(Twall3[i], Mout3[i], area[i])+Q_extra(Twall3[i], h_air[i])+Q_evap(M_evap(Twall3[i], h_air[i], pressure[i], area[i]),Twall3[i], area[i])-Q_imp(beta[i], area[i])-Q_aero(h_air[i])-Q_in(Twall3[i], Min3[i], area[i])
+	Qcond3.append(Qcond3_i)
+
+
 
 x=np.arange(253.15, 273.15, 1)
 y=np.arange(0, 309, 1)
@@ -125,11 +197,21 @@ y_list=y.tolist()
 ax1=plt.subplot(211)
 ax2=plt.subplot(212)
 plt.sca(ax1)
-plt.plot(y, Min)
-plt.plot(y, Mout)
+# plt.plot(y, Min1)
+# plt.xlabel('Number of cells')
+plt.ylabel('Mout')
+plt.plot(y, Mout,label='steady')
+plt.plot(y, Mout1,label='300K')
+plt.plot(y, Mout2,label='306K')
+plt.plot(y, Mout3,label='308K')
+plt.legend()
 plt.sca(ax2)
-plt.plot(y, Qcond)
+plt.xlabel('Number of cells')
+plt.ylabel('Qcond')
+plt.plot(y, Qcond, label='steady')
+plt.plot(y, Qcond1, label='300K')
+plt.plot(y, Qcond2, label='306K')
+plt.plot(y, Qcond3, label='308K')
+# plt.plot(y, Twall_steady)
+plt.legend()
 plt.show()
-
-
-

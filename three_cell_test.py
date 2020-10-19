@@ -124,15 +124,20 @@ for i in range(0, 309):
 class MyProblem(ea.Problem):
 	def __init__(self):
 		name='MyProblem'
+		M=1
 		maxormins=[1]
 		Dim=5
-		varTypes=[0]
-		lb=[273.15]
-		ub=[320]
+		varTypes=[0]*Dim
+		lb=[273.15, 273.15, 273.15,273.15,273.15 ]
+		ub=[320, 320, 320, 320, 320]
 		lbin=[0]*Dim
-		ubin=[0]*Dim
-		ea.Problem.__init__(self, name, M, Maxormins, Dim, varTypes, lb, ub, lbin, ubin)
-		def aimFunction(self, pop):#目标函数
-			x=pop.Phen
-			pop.ObjV=
-
+		ubin=[1]*Dim
+		ea.Problem.__init__(self, name, M, maxormins, Dim, varTypes, lb, ub, lbin, ubin)
+	def aimFunc(self, pop):#目标函数
+		Vars=pop.Phen
+		x1 = Vars[:, [0]]
+		x2 = Vars[:, [1]]
+		x3 = Vars[:, [2]]
+		x4 = Vars[:, [3]]
+		x5 = Vars[:, [4]]
+		pop.ObjV=aim(x1)+aim(x2)+aim(x3)+aim(x4)+aim(x5)
