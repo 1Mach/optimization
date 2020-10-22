@@ -7,43 +7,45 @@ T_inlet=251.35
 Cp_air=1004.5
 LWC=0.55
 I_water=2500000
-area=[]
-beta=[]
-h_air=[]
-pressure=[]
-Twall_steady=[]
+arealist=[]
+betalist=[]
+h_airlist=[]
+pressurelist=[]
+Twall_steadylist=[]
 def read_original_data(filename):
-	s = []
-	area = []
-	dataset = []
-	dataset2 = []
-	dataset3 = []
+	slist = []
+	arealist = []
+	datasetlist = []
+	dataset2list = []
+	dataset3list = []
 	with open(filename, 'r') as f:
 		lines = f.readlines()
 		for data in lines:
 			lines1 = data.strip('\n')
-			dataset.append(lines1)
-		for i in range(4, len(dataset)):
-			dataset2.append(dataset[i])
-		for j in range(0, len(dataset2)):
-			dataset3.append(dataset2[j].split('\t'))
-		for i in range(0, len(dataset3) - 1):
-			s.append(float(dataset3[i][0]))
-			area.append(float(dataset3[i][1]))
-	return area
+			datasetlist.append(lines1)
+		for i in range(4, len(datasetlist)):
+			dataset2list.append(datasetlist[i])
+		for j in range(0, len(dataset2list)):
+			dataset3list.append(dataset2list[j].split('\t'))
+		for i in range(0, len(dataset3list) - 1):
+			slist.append(float(dataset3list[i][0]))
+			arealist.append(float(dataset3list[i][1]))
+	return arealist
 
-area.append(read_original_data('./original_data/area'))
-beta.append(read_original_data('./original_data/beta'))
-h_air.append(read_original_data('./original_data/heat_transfer_coefficient'))
-pressure.append(read_original_data('./original_data/pressure'))
-Twall_steady.append(read_original_data('./original_data/temperature'))
-beta = beta[0]
-area = area[0]
-h_air = h_air[0]
-pressure=pressure[0]
-Twall_steady=Twall_steady[0]
-Twall=[308 for x in range(0,309)]
-
+arealist.append(read_original_data('./original_data/area'))
+area=np.asarray(arealist)
+betalist.append(read_original_data('./original_data/beta'))
+beta=np.asarray(betalist)
+h_airlist.append(read_original_data('./original_data/heat_transfer_coefficient'))
+h_air=np.asarray(h_airlist)
+pressurelist.append(read_original_data('./original_data/pressure'))
+pressure=np.asarray(pressurelist)
+Twall_steadylist.append(read_original_data('./original_data/temperature'))
+# print(Twall_steadylist)
+Twall_steady=np.asarray(Twall_steadylist)
+# print(Twall_steady[0,3])
+Twall=np.ones((1,309))*309
+# print(Twall)
 
 def Q_extra(Twall, hair):
 	T_inlet=251.35
@@ -91,34 +93,40 @@ def Q_cond(Qout, Qextra, Qevap, Qimp, Qaero, Qin):
 	Qcond=Qout+Qextra+Qevap-Qimp-Qaero-Qin
 	return Qcond
 
-Mevap=[]
-Qevap=[]
-for i in range(0, 309):
-	Mevap.append(M_evap(Twall[i], h_air[i], pressure[i], area[i]))
-	Qevap.append(Q_evap(M_evap(Twall[i], h_air[i], pressure[i], area[i]), Twall[i], area[i]))
-Mout=[0 for x in range(0,309)]
-Min=[0 for x in range(0,309)]
-Mout[150]=M_imp(beta[150], area[150])-M_evap(Twall[150],h_air[150],pressure[150], area[150])
-for i in range(150, 308):
-	Min[i+1]=Mout[i]
-	Mout[i+1]=M_imp(beta[i+1], area[i])+Min[i+1]-M_evap(Twall[i+1],h_air[i+1],pressure[i+1], area[i+1])
-	if Mout[i+1]<0:
-		Mout[i+1]=0
+def Water_film():
+	Mevap=np.zeros((1, 309))
+	Qevap=np.zeros((1, 309))
+	for i in range(0, 309):
+		Mevap[0,i]=M_evap(Twall[0,i], h_air[0,i], pressure[0,i], area[0,i])
+		Qevap[0,i]=Q_evap(M_evap(Twall[0,i], h_air[0,i], pressure[0,i], area[0,i]), Twall[0,i], area[0,i])
+	# print(Qevap)
+	Mout=np.zeros((1, 309))
+	Min=np.zeros((1, 309))
 
-for i in range(0, 151):
-	Min[150-i-1]=Mout[150-i]
-	Mout[150-i-1]=M_imp(beta[150-i-1], area[i])+Min[150-i-1]-M_evap(Twall[150-i-1],h_air[150-i-1],pressure[150-i-1], area[150-i-1])
-	if Mout[150-i-1]<0:
-		Mout[150-i-1]=0
+	Mout[0, 150]=M_imp(beta[0,150], area[0,150])-M_evap(Twall[0,150],h_air[0,150],pressure[0,150], area[0,150])
+	for i in range(150, 308):
+		Min[0,i+1]=Mout[0,i]
+		Mout[0,i+1]=M_imp(beta[0,i+1], area[0,i])+Min[0,i+1]-M_evap(Twall[0,i+1],h_air[0,i+1],pressure[0,i+1], area[0,i+1])
+		if Mout[0,i+1]<0:
+			Mout[0,i+1]=0
+
+	for i in range(0, 151):
+		Min[0,150-i-1]=Mout[0,150-i]
+		Mout[0,150-i-1]=M_imp(beta[0,150-i-1], area[0,i])+Min[0,150-i-1]-M_evap(Twall[0,150-i-1],h_air[0,150-i-1],pressure[0,150-i-1], area[0,150-i-1])
+		if Mout[0,150-i-1]<0:
+			Mout[0,150-i-1]=0
+	return Mout, Min
+
+Mout, Min=Water_film()
+# print(Mout)
+# y=np.arange(0, 309, 1)
+# plt.plot(y, Mout[0])
+# plt.show()
 
 
 def aim(Twall):  # 传入种群染色体矩阵解码后的基因表现型矩阵
-	return Q_out(Twall, Mout[10], area[10])+Q_extra(Twall, h_air[10])+Q_evap(M_evap(Twall, h_air[10], pressure[10], area[10]),Twall, area[10])-Q_imp(beta[10], area[10])-Q_aero(h_air[10])-Q_in(Twall, Min[10], area[10])
+	return Q_out(Twall, Mout[0,10], area[0,10])+Q_extra(Twall, h_air[0,10])+Q_evap(M_evap(Twall, h_air[0,10], pressure[0,10], area[0,10]),Twall, area[0,10])-Q_imp(beta[0,10], area[0,10])-Q_aero(h_air[0,10])-Q_in(Twall, Min[0,10], area[0,10])
 
-Qcond=[]
-for i in range(0, 309):
-	Qcond_i=Q_out(Twall[i], Mout[i], area[i])+Q_extra(Twall[i], h_air[i])+Q_evap(M_evap(Twall[i], h_air[i], pressure[i], area[i]),Twall[i], area[i])-Q_imp(beta[i], area[i])-Q_aero(h_air[i])-Q_in(Twall[i], Min[i], area[i])
-	Qcond.append(Qcond_i)
 
 
 class MyProblem(ea.Problem):
@@ -126,18 +134,18 @@ class MyProblem(ea.Problem):
 		name='MyProblem'
 		M=1
 		maxormins=[1]
-		Dim=5
+		Dim=309
 		varTypes=[0]*Dim
-		lb=[273.15, 273.15, 273.15,273.15,273.15 ]
-		ub=[320, 320, 320, 320, 320]
-		lbin=[0]*Dim
-		ubin=[1]*Dim
+		lb=[290 for x in range(0, 309)]
+		ub=[309 for x in range(0, 309)]
+		lbin=[0 for x in range(0,309)]
+		ubin=[1 for x in range(0, 309)]
 		ea.Problem.__init__(self, name, M, maxormins, Dim, varTypes, lb, ub, lbin, ubin)
 	def aimFunc(self, pop):#目标函数
+		aim2=0
 		Vars=pop.Phen
-		x1 = Vars[:, [0]]
-		x2 = Vars[:, [1]]
-		x3 = Vars[:, [2]]
-		x4 = Vars[:, [3]]
-		x5 = Vars[:, [4]]
-		pop.ObjV=aim(x1)+aim(x2)+aim(x3)+aim(x4)+aim(x5)
+		x={}
+		for i in range(0,309):
+			x[i] = Vars[:, [i]]
+			aim2+=aim(x[i])
+		pop.ObjV=aim2
