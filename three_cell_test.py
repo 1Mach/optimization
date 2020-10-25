@@ -124,9 +124,8 @@ Mout, Min=Water_film()
 # plt.show()
 
 
-def aim(Twall):  # 传入种群染色体矩阵解码后的基因表现型矩阵
-	return Q_out(Twall, Mout[0,10], area[0,10])+Q_extra(Twall, h_air[0,10])+Q_evap(M_evap(Twall, h_air[0,10], pressure[0,10], area[0,10]),Twall, area[0,10])-Q_imp(beta[0,10], area[0,10])-Q_aero(h_air[0,10])-Q_in(Twall, Min[0,10], area[0,10])
-
+def aim(Twall,Mout, Min, area, h_air, pressure, beta ):  # 传入种群染色体矩阵解码后的基因表现型矩阵
+	return Q_out(Twall, Mout, area)+Q_extra(Twall, h_air)+Q_evap(M_evap(Twall, h_air, pressure, area),Twall, area)-Q_imp(beta, area)-Q_aero(h_air)-Q_in(Twall, Min, area)
 
 
 class MyProblem(ea.Problem):
@@ -147,5 +146,5 @@ class MyProblem(ea.Problem):
 		x={}
 		for i in range(0,309):
 			x[i] = Vars[:, [i]]
-			aim2+=aim(x[i])
+			aim2+=aim(x[i], Mout[0,i], Min[0,i], area[0,i],h_air[0,i], pressure[0,i], beta[0,i])
 		pop.ObjV=aim2
