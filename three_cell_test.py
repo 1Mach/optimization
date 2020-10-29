@@ -93,35 +93,33 @@ def Q_cond(Qout, Qextra, Qevap, Qimp, Qaero, Qin):
 	Qcond=Qout+Qextra+Qevap-Qimp-Qaero-Qin
 	return Qcond
 
-def Water_film():
-	Mevap=np.zeros((1, 309))
-	Qevap=np.zeros((1, 309))
-	for i in range(0, 309):
-		Mevap[0,i]=M_evap(Twall[0,i], h_air[0,i], pressure[0,i], area[0,i])
-		Qevap[0,i]=Q_evap(M_evap(Twall[0,i], h_air[0,i], pressure[0,i], area[0,i]), Twall[0,i], area[0,i])
-	# print(Qevap)
-	Mout=np.zeros((1, 309))
-	Min=np.zeros((1, 309))
+# def Water_film():
+# 	Mevap=np.zeros((1, 309))
+# 	Qevap=np.zeros((1, 309))
+# 	for i in range(0, 309):
+# 		Mevap[0,i]=M_evap(Twall[0,i], h_air[0,i], pressure[0,i], area[0,i])
+# 		Qevap[0,i]=Q_evap(M_evap(Twall[0,i], h_air[0,i], pressure[0,i], area[0,i]), Twall[0,i], area[0,i])
+# 	# print(Qevap)
+# 	Mout=np.zeros((1, 309))
+# 	Min=np.zeros((1, 309))
+#
+# 	Mout[0, 150]=M_imp(beta[0,150], area[0,150])-M_evap(Twall[0,150],h_air[0,150],pressure[0,150], area[0,150])
+# 	for i in range(150, 308):
+# 		Min[0,i+1]=Mout[0,i]
+# 		Mout[0,i+1]=M_imp(beta[0,i+1], area[0,i])+Min[0,i+1]-M_evap(Twall[0,i+1],h_air[0,i+1],pressure[0,i+1], area[0,i+1])
+# 		if Mout[0,i+1]<0:
+# 			Mout[0,i+1]=0
+#
+# 	for i in range(0, 151):
+# 		Min[0,150-i-1]=Mout[0,150-i]
+# 		Mout[0,150-i-1]=M_imp(beta[0,150-i-1], area[0,i])+Min[0,150-i-1]-M_evap(Twall[0,150-i-1],h_air[0,150-i-1],pressure[0,150-i-1], area[0,150-i-1])
+# 		if Mout[0,150-i-1]<0:
+# 			Mout[0,150-i-1]=0
+# 	return Mout, Min
+#
 
-	Mout[0, 150]=M_imp(beta[0,150], area[0,150])-M_evap(Twall[0,150],h_air[0,150],pressure[0,150], area[0,150])
-	for i in range(150, 308):
-		Min[0,i+1]=Mout[0,i]
-		Mout[0,i+1]=M_imp(beta[0,i+1], area[0,i])+Min[0,i+1]-M_evap(Twall[0,i+1],h_air[0,i+1],pressure[0,i+1], area[0,i+1])
-		if Mout[0,i+1]<0:
-			Mout[0,i+1]=0
 
-	for i in range(0, 151):
-		Min[0,150-i-1]=Mout[0,150-i]
-		Mout[0,150-i-1]=M_imp(beta[0,150-i-1], area[0,i])+Min[0,150-i-1]-M_evap(Twall[0,150-i-1],h_air[0,150-i-1],pressure[0,150-i-1], area[0,150-i-1])
-		if Mout[0,150-i-1]<0:
-			Mout[0,150-i-1]=0
-	return Mout, Min
 
-Mout, Min=Water_film()
-# print(Mout)
-# y=np.arange(0, 309, 1)
-# plt.plot(y, Mout[0])
-# plt.show()
 
 
 def aim(Twall,Mout, Min, area, h_air, pressure, beta ):  # 传入种群染色体矩阵解码后的基因表现型矩阵
@@ -135,16 +133,70 @@ class MyProblem(ea.Problem):
 		maxormins=[1]
 		Dim=309
 		varTypes=[0]*Dim
-		lb=[290 for x in range(0, 309)]
-		ub=[309 for x in range(0, 309)]
+		lb=[273.5 for x in range(0, 309)]
+		ub=[310 for x in range(0, 309)]
 		lbin=[0 for x in range(0,309)]
 		ubin=[1 for x in range(0, 309)]
 		ea.Problem.__init__(self, name, M, maxormins, Dim, varTypes, lb, ub, lbin, ubin)
 	def aimFunc(self, pop):#目标函数
 		aim2=0
+		Mevap = np.zeros((1, 309))
+		Qevap = np.zeros((1, 309))
+		Mout = np.zeros((1, 309))
+		Min = np.zeros((1, 309))
+
 		Vars=pop.Phen
-		x={}
+		x = np.zeros((32, 1000))
 		for i in range(0,309):
-			x[i] = Vars[:, [i]]
-			aim2+=aim(x[i], Mout[0,i], Min[0,i], area[0,i],h_air[0,i], pressure[0,i], beta[0,i])
+			x[:,[i]] = Vars[:, [i]]#提取一列
+		for j in range(0, 309):
+			Mevap[0, j] = M_evap(x[-1,j], h_air[0, j], pressure[0, j], area[0, j])
+			Qevap[0, j] = Q_evap(M_evap(x[-1,j], h_air[0, j], pressure[0, j], area[0, j]), x[-1,j], area[0, j])
+		# print(x[-1,[307]])
+		Mout[0, 150] = M_imp(beta[0, 150], area[0, 150]) - M_evap(x[-1, 150], h_air[0, 150], pressure[0, 150], area[0, 150])
+		# print(Mout[0, 150])
+		# print(x[-1, 150])
+		for i in range(150, 308):
+			Min[0, i + 1] = Mout[0, i]
+			Mout[0, i + 1] = M_imp(beta[0, i + 1], area[0, i+1]) + Min[0, i + 1] - M_evap(x[-1, i+1], h_air[0, i + 1],pressure[0, i + 1],	area[0, i + 1])
+			if Mout[0, i + 1] < 0:
+				Mout[0, i + 1] = 0
+
+		for i in range(0, 151):
+			Min[0, 150 - i - 1] = Mout[0, 150 - i]
+			Mout[0, 150 - i - 1] = M_imp(beta[0, 150 - i - 1], area[0, i]) + Min[0, 150 - i - 1] - M_evap(x[-1,150-i-1], h_air[0, 150 - i - 1], pressure[0, 150 - i - 1], area[0, 150 - i - 1])
+			if Mout[0, 150 - i - 1] < 0:
+				Mout[0, 150 - i - 1] = 0
+
+
+
+		for i in range(0, 309):
+			aim2+=aim(x[:, [i]], Mout[0,i], Min[0,i], area[0,i],h_air[0,i], pressure[0,i], beta[0,i])*area[0, i]
+			# print(aim(x[:, [i]], Mout[0,i], Min[0,i], area[0,i],h_air[0,i], pressure[0,i], beta[0,i]))
 		pop.ObjV=aim2
+		pop.CV=np.hstack([
+			              M_imp(beta[0, 306 ], area[0, 306]) + Mout[0, 305] - M_evap(x[:, [306]], h_air[0, 306], pressure[0, 306],  area[0, 306])-0.0000001,
+						  M_imp(beta[0, 307 ], area[0, 307]) + Mout[0, 306] - M_evap(x[:, [307]], h_air[0, 307],pressure[0, 307],	area[0, 307]),
+						  M_imp(beta[0, 308 ], area[0, 308]) + Mout[0, 307] - M_evap(x[:, [308]], h_air[0, 308],pressure[0, 308],	area[0, 308]),
+						  M_imp(beta[0, 0], area[0, 0]) + Mout[0, 1] - M_evap(x[:, [0]], h_air[0, 0], pressure[0, 0],   area[0, 0]),
+						  M_imp(beta[0, 1], area[0, 1]) + Mout[0, 2] - M_evap(x[:, [1]], h_air[0, 1], pressure[0, 1],   area[0, 1]),
+						  M_imp(beta[0, 2], area[0, 2]) + Mout[0, 3] - M_evap(x[:, [2]], h_air[0, 2], pressure[0, 2],   area[0, 2]),
+						  # np.abs(x[:, [306]] - 300),
+						  # np.abs(x[:,[307]]-300),
+						  # np.abs(x[:,[308]]-380)
+						  ])
+		# print( M_evap(x[:, [308]], h_air[0, 308],pressure[0, 308],area[0, 308]))
+		# print( M_imp(beta[0, 308 ], area[0, 308]))
+		# print(x[-1, 308])
+		print(M_imp(beta[0, 150], area[0, 150]))
+		print(M_evap(x[-1, 150], h_air[0, 150], pressure[0, 150],  area[0, 150]))
+		# print(Mout)
+		# y=np.arange(0, 309).reshape(1, 309)
+		# plt.ion()
+		# plt.plot(y, Mout)
+
+
+
+
+		# pop.CV = np.hstack([np.abs(M_evap(x[:, [308]], h_air[0, 308],pressure[0, 308],	area[0, 308]))])
+
