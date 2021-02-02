@@ -4,12 +4,12 @@ import geatpy as ea
 from three_cell_test import MyProblem
 
 if __name__=='__main__':
-	problem=MyProblem()
+	problem=MyProblem()#实例化问题对象
 	Encoding='RI'#编码方式
 	NIND=16 #种群规模
 	Field=ea.crtfld(Encoding, problem.varTypes, problem.ranges, problem.borders)#区域描述器
-	population=ea.Population(Encoding, Field, NIND)
-	myAlgorithm = ea.soea_DE_rand_1_bin_templet(problem, population)
+	population=ea.Population(Encoding, Field, NIND)#实例化种群对象
+	myAlgorithm = ea.soea_DE_rand_1_bin_templet(problem, population)#实例化算法模板对象
 	myAlgorithm.MAXGEN=3000#最大遗传代数
 	myAlgorithm.mutOper.F = 0.6  #差分进化中的参数F，变异缩放因子
 	myAlgorithm.recOper.XOVR = 0.8  #重组概率，交叉概率
