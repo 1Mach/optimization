@@ -21,10 +21,12 @@ beta=three_cell_test.beta
 if __name__=='__main__':
 	problem=MyProblem()#实例化问题对象
 	Encoding='RI'#编码方式
-	NIND=100 #种群规模
-	Field=ea.crtfld(Encoding, problem.varTypes, problem.ranges, problem.borders)#区域描述器
-	population=ea.Population(Encoding, Field, NIND)#实例化种群对象
-	myAlgorithm = ea.soea_DE_rand_1_bin_templet(problem, population)#实例化算法模板对象
+	NINDs=[100, 50, 30] #种群规模
+	population=[]
+	for i in range(len(NINDs)):
+		Field=ea.crtfld(Encoding, problem.varTypes, problem.ranges, problem.borders)#区域描述器
+		population=ea.Population(Encoding, Field, NINDs[i])#实例化种群对象
+	myAlgorithm = ea.soea_multi_SEGA_templet(problem, population)#实例化算法模板对象
 	myAlgorithm.MAXGEN=2000#最大遗传代数
 	myAlgorithm.mutOper.F = 0.8  #差分进化中的参数F，变异缩放因子
 	myAlgorithm.recOper.XOVR = 0.6  #重组概率，交叉概率
