@@ -1,6 +1,14 @@
+#In this code, I try to modified the single process to multi-process, but it is failed.
 import matplotlib.pyplot as plt
 import numpy as np
 import geatpy as ea
+import multiprocessing as mp
+from multiprocessing import Pool as ProcessPool
+from multiprocessing.dummy import Pool as ThreadPool
+
+
+
+
 Cp_water=4200
 V_inlet=89.4
 T_inlet=251.35
@@ -132,7 +140,7 @@ def aim(Twall,Mout, Min, area, h_air, pressure, beta ):  # 目标函数
 
 
 class MyProblem(ea.Problem):#问题类
-	def __init__(self):
+	def __init__(self, PoolType):
 		name='MyProblem'  #初始化函数名称
 		M=1  #初始化目标维数
 		maxormins=[1]  #初始化最大最小值，1：最小化该目标；-1：最大化该目标
@@ -144,43 +152,29 @@ class MyProblem(ea.Problem):#问题类
 		ubin=[1 for x in range(0, 309)]  # 决策变量上边界（0表示不包含该变量的上边界，1表示包含）
 		#调用父类构造方法完成实例化
 		ea.Problem.__init__(self, name, M, maxormins, Dim, varTypes, lb, ub, lbin, ubin)
+		#设置多线程还是多进程
+		self.PoolType=PoolType
+		if self.PoolType =='Thread':
+			self.pool=ThreadPool(2) #设置池的大小
+		elif self.PoolType == 'Process':
+			num_cores=int(mp.cpu_count()) #统计计算机核心数
+			self.pool=ProcessPool(num_cores)  #设置池的大小
+
+
+
+
+
+
 	def aimFunc(self, pop):#目标函数
-		aim2=0
-		heat_flux_array = np.zeros((NIND, 309))
-		Mevap = np.zeros((NIND, 309)) #蒸发质量初始化
-		Qevap = np.zeros((NIND, 309)) #蒸发能量初始化
+
 
 		Vars=pop.Phen#种群表现型，决策变量矩阵，每一列对应一个决策变量，每一行对应一个个体。
-		x = np.zeros((NIND, 309))#309cells数， NIND种群规模
-		Min=np.zeros((NIND,309))#流入质量
-		Mout=np.zeros((NIND,309))#流入质量
-		for i in range(0,309):
-			x[:,[i]] = Vars[:, [i]] #每一行是一条染色体，也就是一个个体，一个具体问题的解
-		for j in range(0, 309):
-			Mevap[:, [j]] = M_evap(x[:,[j]], h_air[:, [j]], pressure[:, [j]], area[:, [j]])#根据决策变量（也就是温度）计算蒸发质量
-			Qevap[:, [j]] = Q_evap(M_evap(x[:,[j]],  h_air[:, [j]], pressure[:, [j]], area[:, [j]]), x[:,[j]], area[:, [j]])#计算蒸发能量
-		# print(x[-1,[307]])
-		Mout[:, [150]] = M_imp(beta[:, [150]], area[:, [150]]) - M_evap(x[:, [150]], h_air[:, [150]], pressure[:, [150]], area[:, [150]])#计算中间网格的流出量
-		# print(Mout[0, 150])
-		# print(x[-1, 150])
-		for i in range(150, 308):#mout和min没有进行进化，只是利用了种群中的一个个体，这是有问题滴
-			Min[:, [i + 1]] = Mout[:, [i]]#在当前个体(温度的解)下获得水膜流动关系(翼型上部)
-			Mout[:, [i + 1]] = M_imp(beta[:, [i + 1]], area[:, [i+1]]) + Min[:,[ i + 1]] - M_evap(x[:, [i+1]], h_air[:, [i+1]],pressure[:, [i+1]],	area[:, [i+1]])
-			if Mout[:, [i + 1]].all() < 0:#限制流出质量非负
-				Mout[:, [i + 1]] = 0
-
-		for i in range(0, 151):
-			Min[:, [150 - i - 1]] = Mout[:, [150 - i]]#在当前个体(温度的解)下获得水膜流动关系(翼型下部)
-			Mout[:, [150 - i - 1]] = M_imp(beta[:, [150 - i - 1]], area[:, [i]]) + Min[:, [150 - i - 1]] - M_evap(x[:,[150-i-1]], h_air[:, [150 - i - 1]], pressure[:, [150 - i - 1]], area[:, [150 - i - 1]])
-			if Mout[:, [150 - i - 1]].all() < 0:#限制流出质量非负
-				Mout[:, [150 - i - 1]] = 0
 
 
 
-		for i in range(0, 309):
-			heat_flux_array[:,[i]]=aim(x[:, [i]], Mout[:,[i]], Min[:,[i]], area[:,[i]],h_air[:,[i]], pressure[:,[i]], beta[:,[i]])*area[:, [i]]
-			aim2+=heat_flux_array[:,[i]]
-		pop.ObjV=aim2
+
+		for i in range(9):
+			pop.ObjV=ProcessPool(9).map(aim2, Vars)
 		#采用可行性法则处理约束，生成种群个体违反约束程度矩阵
 		#违反约束程度矩阵，每一行对应种群的一个个体，每一列对应一个约束条件。
 		#np.hstack把列向量拼合在一起形成约束矩阵。
@@ -233,6 +227,8 @@ class MyProblem(ea.Problem):#问题类
 						  np.abs(x[:,[307]]-x[:,[308]])-2,#第三个约束，最后一点和倒数第二点的温度差绝对值小于5
 						  x[:, [150]]-310,
 						  ])
+
+
 		# print( M_evap(x[:, [308]], h_air[0, 308],pressure[0, 308],area[0, 308]))
 		# print( M_imp(beta[0, 308 ], area[0, 308]))
 		# print(x[-1, 308])
@@ -242,4 +238,45 @@ class MyProblem(ea.Problem):#问题类
 		# plt.plot(y, Mout[[-1],:])
 		# plt.show()
 
+			def aim2(args):
+				aim2 = 0
+				heat_flux_array = np.zeros((NIND, 309))
+				Mevap = np.zeros((NIND, 309))  # 蒸发质量初始化
+				Qevap = np.zeros((NIND, 309))  # 蒸发能量初始化
+				x = np.zeros((NIND, 309))  # 309cells数， NIND种群规模
+				Min = np.zeros((NIND, 309))  # 流入质量
+				Mout = np.zeros((NIND, 309))  # 流入质量
+				for i in range(0, 309):
+					x[:, [i]] = args[:, [i]]  # 每一行是一条染色体，也就是一个个体，一个具体问题的解
+				for j in range(0, 309):
+					Mevap[:, [j]] = M_evap(x[:, [j]], h_air[:, [j]], pressure[:, [j]],
+										   area[:, [j]])  # 根据决策变量（也就是温度）计算蒸发质量
+					Qevap[:, [j]] = Q_evap(M_evap(x[:, [j]], h_air[:, [j]], pressure[:, [j]], area[:, [j]]), x[:, [j]],
+										   area[:, [j]])  # 计算蒸发能量
+				# print(x[-1,[307]])
+				Mout[:, [150]] = M_imp(beta[:, [150]], area[:, [150]]) - M_evap(x[:, [150]], h_air[:, [150]],
+																				pressure[:, [150]],
+																				area[:, [150]])  # 计算中间网格的流出量
+				# print(Mout[0, 150])
+				# print(x[-1, 150])
+				for i in range(150, 308):  # mout和min没有进行进化，只是利用了种群中的一个个体，这是有问题滴
+					Min[:, [i + 1]] = Mout[:, [i]]  # 在当前个体(温度的解)下获得水膜流动关系(翼型上部)
+					Mout[:, [i + 1]] = M_imp(beta[:, [i + 1]], area[:, [i + 1]]) + Min[:, [i + 1]] - M_evap(
+						x[:, [i + 1]], h_air[:, [i + 1]], pressure[:, [i + 1]], area[:, [i + 1]])
+					if Mout[:, [i + 1]].all() < 0:  # 限制流出质量非负
+						Mout[:, [i + 1]] = 0
 
+				for i in range(0, 151):
+					Min[:, [150 - i - 1]] = Mout[:, [150 - i]]  # 在当前个体(温度的解)下获得水膜流动关系(翼型下部)
+					Mout[:, [150 - i - 1]] = M_imp(beta[:, [150 - i - 1]], area[:, [i]]) + Min[:,
+																						   [150 - i - 1]] - M_evap(
+						x[:, [150 - i - 1]], h_air[:, [150 - i - 1]], pressure[:, [150 - i - 1]],
+						area[:, [150 - i - 1]])
+					if Mout[:, [150 - i - 1]].all() < 0:  # 限制流出质量非负
+						Mout[:, [150 - i - 1]] = 0
+
+				for i in range(0, 309):
+					heat_flux_array[:, [i]] = aim(x[:, [i]], Mout[:, [i]], Min[:, [i]], area[:, [i]], h_air[:, [i]],
+												  pressure[:, [i]], beta[:, [i]]) * area[:, [i]]
+					aim2 += heat_flux_array[:, [i]]
+				return aim2
