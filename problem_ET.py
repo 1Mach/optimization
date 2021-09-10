@@ -132,7 +132,7 @@ class MyProblem(ea.Problem):
 		M=1  #初始化目标维数
 		maxormins=[1]  #初始化最大最小值，1：最小化该目标；-1：最大化该目标
 		Dim=4 #初始化决策变量维数
-		varTypes=[1]*Dim #初始化决策变量类型，元素为0表示对应的变量是连续的；1表示是离散的，连续型变量
+		varTypes=[0]*Dim #初始化决策变量类型，元素为0表示对应的变量是连续的；1表示是离散的，连续型变量
 		lb=[0 for x in range(0, 4)] #决策变量下界
 		ub=[45000 for x in range(0, 4)]  #决策变量上界
 		lbin=[0 for x in range(0,4)]  ## 决策变量下边界（0表示不包含该变量的下边界，1表示包含）
@@ -235,9 +235,9 @@ class MyProblem(ea.Problem):
 				T_wall[:,[i]]=T_wall[:, [i-1]]
 				# print("T_wall:%f"%(T_wall[-1, i]))
 				# print("计算到第 %d 个网格" % (i))
-				for k in range(0, 100):
+				for k in range(0, 1000):
 					T_ref=0.5*(T_s[0, [i]]+T_wall[0, [i]]+T0[:,[0]])
-					#print(T_ref)
+					# print(T_ref)
 					m_imp_per[:,[i]]=LWC * beta[:,[i]] * u_inf
 					m_imp[:,[i]]=m_imp_per[:,[i]]*area[:,[i]]
 
@@ -249,7 +249,7 @@ class MyProblem(ea.Problem):
 							miu_water[k_1,0]=1e-3*(1.76*m.exp(-3.5254e-2*(T_ref[k_1, 0]-T0[k_1,0])+4.7163e-4*(T_ref[k_1, 0]-T0[k_1,0])**2.-6.0667e-6*(T_ref[k_1, 0]-T0[k_1,0])**3))
 						else:
 							#rou_water[k_1,0]=1000 * (0.99986 + 6.69e-5 * (T_ref[k_1, 0]-T0[k_1,0]) - 8.486e-6 * (T_ref[k_1, 0]-T0[k_1,0]) ** 2.	+ 1.518e-7 * (T_ref[k_1, 0]-T0[k_1,0]) ** 3 - 6.9484e-9 * (T_ref[k_1, 0]-T0[k_1,0]) ** 4 - 3.6449e-10 ** (T_ref[k_1, 0]-T0[k_1,0]) ** 5.- 7.497e-12 * (T_ref[k_1, 0]-T0[k_1,0]) ** 6)
-							rou_water[k_1,0]==998
+							rou_water[k_1,0]=998
 							Cp_water[k_1,0]=4185.8518 * (1.000938 - 2.7052e-3 * (T_ref[k_1, 0]-T0[k_1,0]) - 2.3235e-5 * (T_ref[k_1, 0]-T0[k_1,0]) ** 2.	+ 4.3778e-6 * (T_ref[k_1, 0]-T0[k_1,0]) ** 3 + 2.7136e-7 * (T_ref[k_1, 0]-T0[k_1,0]) ** 4)
 							miu_water[k_1,0]=1e-3 * (1.76 * m.exp(-5.5721e-2 * (T_ref[k_1, 0]-T0[k_1,0]) - 1.3943e-3 * (T_ref[k_1, 0]-T0[k_1,0]) ** 2. - 4.3015e-5 * (T_ref[k_1, 0]-T0[k_1,0]) ** 3))
 
@@ -268,7 +268,7 @@ class MyProblem(ea.Problem):
 						# print("Q_imp: %f" % (Q_imp[k_1, i - 1]))
 						#
 						# print("T_ref2: %f" % (T_ref_2[k_1, 0]))
-						# print("T_s=%f" %(T_s[k_1, i-1]))
+						# print("T_s=%f" %(T_s[k_1, i]))
 						# print("P_s=%f" %(q_anti[k_1, i-1]) )
 						#
 						# print("计算到第 %d 个网格" % (i))
@@ -304,37 +304,49 @@ class MyProblem(ea.Problem):
 					T_ref_2[:, [0]]=(Q_in[:, [i-1]]+Q_imp[:, [i]]+Q_anti[:, [i]] -Q_evap[:, [i]])/h_air[:, [i]]/area[:, [i]] + 247.8
 
 
-					for k_3 in range(0, NIND):
-						if (T_s[k_3, i] - T_ref_2[k_3, 0] )> 0.00001:
-							T_s[k_3, i] = T_s[k_3, i] - 0.01 * (T_s[k_3, i] - T_ref_2[k_3, 0])
-						elif(T_s[k_3, i] - T_ref_2[k_3, 0]) < -0.00001:
-							T_s[k_3, i] = T_s[k_3, i] + 0.01 * (T_ref_2[k_3, 0] - T_s[k_3, i])
-						print("计算到第 %d 个网格" % (i))
-						print("迭代到第 %d 次" % (k))
-						print("T_s(k_3)=%f" % (T_s[k_3, i]))
+					#===================修改前的-0=====================================
+				# for k_3 in range(0, NIND):
+				# 	while (abs(T_s[k_3, i] - T_ref_2[k_3, 0] )> 0.00001):
+				# 		T_s[k_3, i] = T_s[k_3, i] + 0.01 * (T_ref_2[k_3, 0] - T_s[k_3, i])
+				# err[:, [0]] = (abs(T_s[:, [i]] - T_ref_2[:, [0]]))
+				# if (((err[:, [0]]) <= 0.0001).all()):
+				# 	break
+				# else:
+				# 	T_s[:, [i]] = T_s[:, [i]] + 0.01 * (T_ref_1[:, [0]] - T_s[:, [i]])
+					#====================修改前的-0====================================
 
-							# if(T_s[k_3, i]>T_ref_2[k_3, 0]):
-							# 	T_s[k_3, i]=T_s[k_3, i] - 0.01 * (T_s[k_3, i] - T_ref_2[k_3, 0])
-							# else:
-							# 	T_s[k_3, i] = T_s[k_3, i] + 0.01 * (T_ref_2[k_3, 0] - T_s[k_3, i])
+				#=====================另一种-0=============================
+				for k_3 in range(0, NIND):
+					if(abs(T_s[k_3, i] - T_ref_2[k_3, 0] )> 0.00001):
+						T_s[k_3, i] = T_s[k_3, i] + 0.01 * (T_ref_2[k_3, 0] - T_s[k_3, i])
+
+				err[:, [0]] = (abs(T_s[:, [i]] - T_ref_2[:, [0]]))
+				if (((err[:, [0]]) <= 0.0001).all()):
+					break
+				else:
+					T_s[:, [i]] = T_s[:, [i]] + 0.01 * (T_ref_1[:, [0]] - T_s[:, [i]])
 
 
-					err[:, [0]] = (abs(T_s[:, [i]] - T_ref_2[:, [0]]))
-					if (((err[:, [0]]) <= 0.00001).all()):
-						break
-					else:
-						T_s[:, [i]] = T_s[:, [i]] + 0.01 * (T_ref_1[:, [0]] - T_s[:, [i]])
+
+				#=====================另一种-1=============================
+
+
+
+
+
+
+					###============修改后的-0==================================
+
+					# err[:, [0]] = (abs(T_s[:, [i]] - T_ref_2[:, [0]]))
+					# if (((err[:, [0]]) <= 0.0001).all()):
+					# 	# print("T_s(k_3)=%f" % (T_s[-1]))
+					# 	break
 					# else:
 					# 	for k_4 in range(0, NIND):
-					# 		if (T_s[k_4, i] > T_ref_2[k_4, 0]):
-					# 			T_s[k_4, [i]] = T_s[:, [i]] + 0.01 * (T_ref_2[:, [0]] - T_s[:, [i]])
-							# if (abs(T_s[k_3, i]-T_ref_2[k_3, 0])>0.00001):
-							# 	T_s[k_3,i]=T_s[k_3,i]+0.01*(T_ref_2[k_3, 0]-T_s[k_3,0])
-					# for f in range(0, NIND):
-					# 	if (T_s[f, i] > 400):
-					# 		T_s[f, i] = 310
-					# 	elif (T_s[f, i] < 200):
-					# 		T_s[f, i] = 310
+					# 		if(abs(T_s[k_4, i] - T_ref_2[k_4, 0])>0.0001):
+					# 			T_s[k_4,i]=T_s[k_4,i]+0.01*(T_ref_2[k_4, 0]-T_s[k_4,i])
+					#===============修改后的-0=================================
+
 				T_wall[:, [i]] = T_s[:, [i]] - T0[:, [0]]
 				#print('a',T_wall[-1, 152])
 		
