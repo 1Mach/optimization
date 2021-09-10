@@ -25,7 +25,7 @@ if __name__=='__main__':
 	Field=ea.crtfld(Encoding, problem.varTypes, problem.ranges, problem.borders)#区域描述器
 	population=ea.Population(Encoding, Field, NIND)#实例化种群对象
 	myAlgorithm = ea.soea_DE_rand_1_bin_templet(problem, population)#实例化算法模板对象
-	myAlgorithm.MAXGEN=200000#最大遗传代数
+	myAlgorithm.MAXGEN=5000#最大遗传代数
 	myAlgorithm.mutOper.F = 0.8  #差分进化中的参数F，变异缩放因子
 	myAlgorithm.recOper.XOVR = 0.6  #重组概率，交叉概率
 	myAlgorithm.logTras = 1  #设置每隔多少代记录日志，若设置成0则表示不记录日志

@@ -1,18 +1,62 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import geatpy as ea
+import math as m
+
+#----------空气物性参数1--------------
+
+R_a           = 287
+Cp_air        = 1013
+
+#----------------试验参数------------------
+LWC           = 0.55*1e-3
+MVD           = 20*1e-6
+p_tot         = 70000
+u_inf         = 89.4
+T_tot         = 251.55
+T0            = 273.15
+T_inf         = T_tot-u_inf*u_inf/2/Cp_air
+delt_s        = 1e-4
+p_0           = p_tot/(1+(u_inf**2)/2/R_a/T_inf)
+
+
+#--------------空气五行参数2----------------
+rou_air       = p_0/R_a/T_inf
+miu_air       = 1/(0.12764+124.38*(1/T_inf))*10**(-5)
+lamda_air     = -1.4758e-2+2.3597e-3*(m.sqrt(T_inf))
+Pr_air        = Cp_air*miu_air/lamda_air
+M_air         = 29
+R_air         = 287
+
+
+#----------------液态水物性参数----------------------
+lamda_water   = 0.599
+M_H2O         = 18
+R_v           = 461.4
+
 Cp_water=4200
 V_inlet=89.4
 T_inlet=251.35
-Cp_air=1004.5
-LWC=0.55
 NIND=100
-I_water=2500000
-arealist=[]
-betalist=[]
-h_airlist=[]
-pressurelist=[]
-Twall_steadylist=[]
+#I_water=2500000
+
+
+#--------《Microphysics of Clouds and Precipitation》Magnus equation-----------
+e_inf=610.70*m.exp(17.15*(T_inf-T0)/(T_inf-38.25)) #液膜表面饱和水蒸气压
+
+
+
+
+
+#-----------读取参数--------------------
+arealist=[]  #面积
+betalist=[]   #水收集系数
+h_airlist=[]   #空气对流换热系数
+pressurelist=[]   #压力
+Twall_steadylist=[]   #稳态壁温
+
+#--------------------------------------
+#-----------------读文件----------------
 def read_original_data(filename):
 	slist = []
 	arealist = []
@@ -24,7 +68,7 @@ def read_original_data(filename):
 		for data in lines:
 			lines1 = data.strip('\n')
 			datasetlist.append(lines1)
-		for i in range(4, len(datasetlist)):
+		for i in range(4, len(datasetlist)):#从第四行开始读
 			dataset2list.append(datasetlist[i])
 		for j in range(0, len(dataset2list)):
 			dataset3list.append(dataset2list[j].split('\t'))
@@ -51,9 +95,18 @@ pressure=np.repeat(pressure, NIND, axis=0)
 Twall_steadylist.append(read_original_data('./original_data/temperature'))
 # print(Twall_steadylist)
 Twall_steady=np.asarray(Twall_steadylist)#计算的稳态的温度
-print(Twall_steady[0,150])
+# print(Twall_steady[0,3])
 Twall=np.ones((1,309))*309#转换成矩阵
 # print(Twall)
+
+
+
+
+
+
+
+
+#------------------------------------------
 
 def Q_extra(Twall, hair):#计算对流换热损失
 	T_inlet=251.35
@@ -92,18 +145,85 @@ def M_evap(Twall, h_air, pressure, area):#计算蒸发质量
 	Mevap=hG*(temp1 / ((pressure + Popera) - temp1) - temp2 / (P_st - temp2))
 	return Mevap
 
-
 def Q_evap(Mevap, Twall, area):#计算蒸发热流密度
 	Qevap=(Mevap*I_water+Mevap*Twall*Cp_water)/area
 	return Qevap
-Mevap=M_evap(Twall[0, 150], h_air[0, 150], pressure[0, 150], area[0, 150])
 
-Qevap=Q_evap(Mevap, Twall[0, 150], area[0, 150])
-print(Qevap)
 
 def Q_cond(Qout, Qextra, Qevap, Qimp, Qaero, Qin):#计算防冰负荷
 	Qcond=Qout+Qextra+Qevap-Qimp-Qaero-Qin
 	return Qcond
+
+
+
+
+def Ite_water_film():
+	T_s = np.zeros((1, 309))
+	T_wall = np.zeros((1, 309))
+	T_rec = np.zeros((1, 309))
+	e_sat_water=np.zeros((1, 309))
+	m_evap_per=np.zeros((1, 309))
+	Le=np.zeros((1, 309))
+	m_evap=np.zeros((1, 309))
+	m_in=np.zeros((1, 309))
+	for i in range(0, 151):
+		if i==0:
+			T_s[0, i]=273.15
+			T_wall[0, i]=T_s[0, i]-T0
+			for j in range(0, 999):
+				T_ref=(T_s[0, i]+T_wall[0, i]+T0)
+				if T_ref >= T0:
+					row_water=(999.8396+18.224944*(T_ref-T0)-7.922210e-3*(T_ref-T0)**2.-55.44846e-6*(T_ref-T0)**3+149.7562e-9*(T_ref-T0)**4-393.2952e-12*(T_ref-T0)**5)/(1+(18.159725e-3)*(T_ref-T0))
+					Cp_water = 4185.8518 * (0.9979 + 3.1e-6 * (T_ref - T0 - 35) ** 2 + 3.8e-9 * (T_ref - T0 - 35) ** 4)
+					miu_water = 1e-3 * (1.76 * m.exp(-3.5254e-2 * (T_ref - T0) + 4.7163e-4 * (T_ref - T0) ** 2. - 6.0667e-6 * (T_ref - T0) ** 3))
+				else:
+					rou_water = 1000 * (0.99986 + 6.69e-5 * (T_ref - T0) - 8.486e-6 * (T_ref - T0) ** 2. + 1.518e-7 * (T_ref - T0) ** 3 - 6.9484e-9 * (T_ref - T0) ** 4 - 3.6449e-10 * (T_ref - T0) ** 5. - 7.497e-12 * (T_ref - T0) ** 6)
+					Cp_water = 4185.8518 * (1.000938 - 2.7052e-3 * (T_ref - T0) - 2.3235e-5 * (T_ref - T0) ** 2. + 4.3778e-6 * (T_ref - T0) ** 3 + 2.7136e-7 * (T_ref - T0) ** 4)
+					miu_water = 1e-3 * (1.76 * m.exp(-5.5721e-2 * (T_ref - T0) - 1.3943e-3 * (T_ref - T0) ** 2. - 4.3015e-5 * (T_ref - T0) ** 3))
+				D_v= 0.211*((0.5*(T_ref+T_inf)/273.15)**1.94)*(101325/p_0)*1e-4
+				Sc=miu_air/rou_air/D_v
+				e_sat_water[0, i] = 610.70 * m.exp(17.15 * (T_s[0, i] - T0) / (T_s[0, i]- 38.25))
+
+				Le[0, i] = 4185.8518 * (597.3 - 0.561 * (T_s[0, i] - T0))
+				m_evap_per[0, i] = 0.622 * h_air[0, i] / Cp_air * ( e_sat_water[0, i] / (pressure[0, i] - e_sat_water[0, i]) - e_inf / (p_0 - e_inf))
+				m_evap[0, i] = m_evap_per[0, i] * area[0, i]
+				#-------------质量平衡-------------------------
+				m_in[0, i]=0
+				if (m_in[0, 1]+M_imp(beta[0,i], area[0, i])<=m_evap[0, i]):
+					m_sta_p=0
+					m_evap[0, i]=m_in[0, 1]+M_imp(beta[0,i], area[0, i])
+					m_evap[0, i]=m_evap_per[0, i] *area[0, i]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def Water_film():  #计算水膜
 	Mevap=np.zeros((NIND, 309))   #初始化
