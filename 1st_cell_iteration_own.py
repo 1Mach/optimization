@@ -210,7 +210,7 @@ for i in range(150, 309):
 			e_sat_water[0, i] = 610.70 * m.exp(17.15 * (T_s[0, i] - T0) / (T_s[0, i] - 38.25))
 			Le[0, i] = 4185.8518 * (597.3 - 0.561 * (T_s[0, i] - T0))
 			m_evap_per[0, i] = 0.622 * h_air[0, i]/ Cp_air * (e_sat_water[0, i] / (pressure[0, i] - e_sat_water[0, i]) - e_inf / (p_0 - e_inf))
-			m_evap[0, i]=m_evap_per[0, i]*area[0, i] #这个需要替换成我自己的结果
+			m_evap[0, i]=m_evap_per[0, i]*area[0, i]
 			if (m_in[0, i-1]+m_imp[0, i]<=m_evap[0, i]):
 				m_in[0, i]=0
 				m_evap[0, i]=m_in[0, i]+m_imp[0, i]
@@ -231,18 +231,18 @@ for i in range(150, 309):
 			Q_conv[0, i]=Q_conv_per[0, i]*area[0, i]
 			Q_anti[0, i]=q_anti[0, i]*area[0, i]
 
-			#Q_in[0, i]=Q_in[0, i-1]+(Q_imp[0, i]+Q_anti[0, i])-(Q_evap[0, i]+Q_conv[0, i])
-			#Q_out[0, i-1]=Q_in[0, i]
+			# Q_in[0, i]=Q_in[0, i-1]+(Q_imp[0, i]+Q_anti[0, i])-(Q_evap[0, i]+Q_conv[0, i])
+			# Q_out[0, i-1]=Q_in[0, i]
 
 			T_ref_2=(Q_in[0, i-1]+Q_imp[0, i]+Q_anti[0, i] -Q_evap[0, i])/h_air[0, i]/area[0, i] + 247.8
-
 			if (abs(T_s[0, i]-T_ref_2)<0.00001):
 				break
 			else:
 				T_s[0, i]=T_s[0, i]+0.01 * (T_ref_2-T_s[0, i])
 		T_wall[0, i]=T_s[0, i]-T0
 print(e_sat_water)
-print(T_s[0, 152])
+print(T_s[0, 151])
+
 
 
 

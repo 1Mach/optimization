@@ -32,6 +32,7 @@ if __name__ == '__main__':
 	print('时间已过 %s 秒' % myAlgorithm.passTime)
 	if BestIndi.sizes != 0:
 		print('最优的目标函数值为：%s' % BestIndi.ObjV[0][0])#BestIndi:最优个体
+
 		print('最优的控制变量值为：')
 		for i in range(BestIndi.Phen.shape[1]):#k.shape[0]输出矩阵k的行数,k.shape[1]输出矩阵k的列数。Phen种群表现型矩阵。
 			print(BestIndi.Phen[0, i])#输出最后一代种群的第一个个体，也就是最后一代种群表现型的第一行
